@@ -73,3 +73,39 @@ export const login = async (req, res) => {
         .send({ message: error.message })
     }
 }
+
+export const forgotUserPassword = async(req, res)=>{
+    const { username, email, newpassword} = req.body
+    //username and newpassword and email is empty
+    if((!username && !email) || !newpassword){
+        return res.status(400).send({message: "All fields are required"})
+    }
+    //check email regex
+    if(!emailRegex.test(email)){
+        return res.status(400).send({message: "Invalid email"})
+    }
+    
+    try {
+            const user = await User.findOne({
+                $or:[{username},{email}]
+            })
+            .exec()
+            if(!user){
+                return res.status(400).send({message: "Invalid username or email"})
+            }
+
+            const hashedPassword = await bcrypt.hash(newpassword, 10)
+            await User.findByIdAndUpdate(user._id, 
+                {
+                    password: hashedPassword
+                });
+            
+            res.status(200).send({message: "Password reset successful"})
+        } catch (error) {   
+            res.status(400).send({message: error.message})
+        }
+}
+
+
+
+        
