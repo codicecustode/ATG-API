@@ -1,14 +1,26 @@
 import User from '../models/user.model.js'
- import jwt from 'jsonwebtoken'
- import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+const emailRegex = /^([^\s@]+@[^\s@]+\.[^\s@]+)$/;
+
  export const register = async (req, res) => {
     try {
         const{username, password, email} = req.body;
-        const isEmailExist = User.findOne(email);
+
+        if(!username || !password || !email){
+            return res.status(400).send({message: "All fields are required"});
+        }
+
+        if(!emailRegex.test(email)){
+            return res.status(400).send({message: "Invalid email"});
+        }
+
+        const isEmailExist = await User.findOne({email});
+        
         if(isEmailExist){
             return res.status(400).send({message: "Email already exists"});
         }
-        const isUserNameExist = User.findOne(username);
+        const isUserNameExist = await User.findOne({username});
         if(isUserNameExist){
             return res.status(400).send({message: "Usename already exists"});
         }
@@ -37,8 +49,8 @@ import User from '../models/user.model.js'
 export const login = async (req, res) => {
     try {
         const {username, password} = req.body;
-        const user = await User
-        .findOne({username})
+        const user = await User.findOne({username})
+        
         if(!user){
             return res.status(400).send({message: "Username does not exist"});
         }
@@ -54,7 +66,7 @@ export const login = async (req, res) => {
             }, process.env.TOKEN_SECRET
         )
 
-        res.header('auth-token', token).json({token, username, email}) 
+        res.header('auth-token', token).json({message:"user login successful",token, username, email}) 
     }
     catch (error) {
         res.status(400)
