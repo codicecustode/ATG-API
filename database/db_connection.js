@@ -12,3 +12,5 @@ const DB_CONNECTION = ()=>{
         console.log('Error connecting to database')
     }
 }
+
+export default DB_CONNECTION;

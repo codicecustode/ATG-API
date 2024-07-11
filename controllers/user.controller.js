@@ -1,11 +1,10 @@
-//write rejistering code for user
- import User from '../models/user.model'
+import User from '../models/user.model.js'
  import jwt from 'jsonwebtoken'
  import bcrypt from 'bcrypt'
  export const register = async (req, res) => {
     try {
         const{username, password, email} = req.body;
-        const isEmailExist = User.findOne(username);
+        const isEmailExist = User.findOne(email);
         if(isEmailExist){
             return res.status(400).send({message: "Email already exists"});
         }
@@ -23,11 +22,11 @@
         await user.save()
         //generate token
         const token = jwt.sign({
-            username: user.username, id:
-            user._id
+            username: user.username, 
+            id:user._id
             }, process.env.TOKEN_SECRET
         )
-        res.status(201).send(user)
+        res.status(201).json({user, token})
     } catch (error) {
         res.status(400)
         .send({ message: error.message })
@@ -62,6 +61,3 @@ export const login = async (req, res) => {
         .send({ message: error.message })
     }
 }
-
-
-        

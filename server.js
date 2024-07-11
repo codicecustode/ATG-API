@@ -7,6 +7,8 @@ import 'dotenv/config'
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({extended: true }));
 
+
+import router from './routes/user.route.js'
 app.use(router)
 
 //connecting to database
