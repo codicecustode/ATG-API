@@ -81,7 +81,7 @@ export const forgotUserPassword = async(req, res)=>{
         return res.status(400).send({message: "All fields are required"})
     }
     //check email regex
-    if(!emailRegex.test(email)){
+    if(!emailRegex.test(email) && email){
         return res.status(400).send({message: "Invalid email"})
     }
     
@@ -93,7 +93,10 @@ export const forgotUserPassword = async(req, res)=>{
             if(!user){
                 return res.status(400).send({message: "Invalid username or email"})
             }
-
+           //check newpassword is same as before or not
+            if(await bcrypt.compare(newpassword, user.password)){
+                return res.status(400).send({message: "New password cannot be the same as the old password"})
+            }
             const hashedPassword = await bcrypt.hash(newpassword, 10)
             await User.findByIdAndUpdate(user._id, 
                 {
