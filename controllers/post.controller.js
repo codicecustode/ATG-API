@@ -23,7 +23,7 @@ const createPost = async (req, res, next) => {
         const savedPost = await post.save();
         const {user, image, caption, likes, comments, createdAt} = savedPost
         const createdPost = { user, image, caption, likes, comments, createdAt}
-        res.status(201).json({message:'post created succcessful', createdPost});
+        res.status(201).json({message:'post created succcessful', savedPost});
     } catch (error) {
         res.status(400).send(error);
     }
