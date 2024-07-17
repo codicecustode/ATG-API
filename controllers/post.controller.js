@@ -1,4 +1,6 @@
 import Post from '../models/post.model.js'
+import Comment from '../models/comment.model.js'
+import Like from '../models/like.model.js'
 import {uploadOnCloudinary} from '../utils/cloudinary.js'
 
 const createPost = async (req, res, next) => {
@@ -27,10 +29,11 @@ const createPost = async (req, res, next) => {
     }
 }
 
-//get all the post
+//get all the post of a user 
 const getAllPost = async (req, res) => {
     try {
-        const posts = await Post.find().populate('user', 'username');
+        const userId = req.user._id;
+        const posts = await Post.find({ user: userId }).populate('user', 'username');
         res.status(200).send(posts);
     } catch (error) {
         res.status(400).send(error);
@@ -38,14 +41,28 @@ const getAllPost = async (req, res) => {
 }
 
 //get post by id
+// Example of getPostById controller function
 const getPostById = async (req, res) => {
+    const postId = req.params.id;
+
     try {
-        const post = await Post.findById(req.params.id).populate('user', 'username');
-        res.status(200).send(post);
+        const post = await Post.findById(postId)
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        const {user, image, caption, likes, comments, createdAt} = post
+        const postDetails = { user, image, caption, likes, comments, createdAt}
+
+        // Send the post data in the response
+        res.json({ postDetails });
     } catch (error) {
-        res.status(400).send(error);
+        console.error('Error fetching post:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-}
+};
+
 
 //update the post
 const updatePost = async (req, res) => {
@@ -67,8 +84,18 @@ const updatePost = async (req, res) => {
 //delete the post and delete related comment and like
 const deletePost = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const postId = req.params.id
+        const post = await Post.findById(postId);
+
+        if(!post){
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        
         if(post.user.toString() === req.user._id.toString()){
+            const comments = await Comment.findById(postId)
+            const likes = await Like.findById(postId)
+            console.log(comments)
+            console.log(likes)
             await post.deleteOne();
             res.status(200).send('Post has been deleted');
         } else {
