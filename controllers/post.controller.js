@@ -65,21 +65,35 @@ const getPostById = async (req, res) => {
 
 
 //update the post
-const updatePost = async (req, res) => {
+const updateCaptionOfPost = async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
-        if(post.user.toString() === req.user._id.toString()){
-            await post.updateOne({
-                $set: req.body
+        const { newUpdatedCaption } = req.body;
+        const postId = req.params.id;
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        
+        if (post.user.toString() === req.user._id.toString()) {
+            const updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                { $set: { caption: newUpdatedCaption } },
+                { new: true }
+            );
+
+            res.status(200).json({
+                message: 'Post updated successfully',
+                updatedPost
             });
-            res.status(200).send('Post has been updated');
         } else {
-            res.status(401).send('You can update only your post');
+            res.status(401).json({ message: 'You can update only your post' });
         }
     } catch (error) {
-        res.status(400).send(error);
+        console.error('Error updating post:', error);
+        res.status(400).json({ message: 'Error updating post', error });
     }
-}
+};
 
 //delete the post and delete related comment and like
 const deletePost = async (req, res) => {
@@ -92,14 +106,18 @@ const deletePost = async (req, res) => {
         }
         
         if(post.user.toString() === req.user._id.toString()){
-            const comments = await Comment.findById(postId)
-            const likes = await Like.findById(postId)
-            console.log(comments)
-            console.log(likes)
+            
+            await Comment.deleteMany({ post: postId });
+            await Like.deleteMany({ post: postId });
+
             await post.deleteOne();
-            res.status(200).send('Post has been deleted');
+            res.status(200).json({
+                message: 'Post has been deleted and associated like and comment also deleted'
+            })
         } else {
-            res.status(401).send('You can delete only your post');
+            res.status(401).json({
+                message: 'You can delete only your post'
+            })
         }
     } catch (error) {
         res.status(400).send(error);
@@ -111,7 +129,7 @@ export{
     createPost,
     getAllPost,
     getPostById,
-    updatePost,
+    updateCaptionOfPost,
     deletePost
 }
 
